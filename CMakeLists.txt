@@ -84,9 +84,10 @@ link_directories(
     /opt/homebrew/lib     # yaml-cpp library location
 )
 
-# Find source files
+# Find source files for main application (excluding test files)
 file(GLOB_RECURSE GEMMINI_SOURCES
-    "${CMAKE_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/main.cpp"
+    "${CMAKE_SOURCE_DIR}/src/gemmini/*.cpp"
 )
 
 # Add Gemmini simulator executable
@@ -103,8 +104,40 @@ target_link_libraries(gemmini_simulator
     ${ZLIB_LIBRARIES}
 )
 
+# Setup Google Test - use system-installed GTest
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
+# Enable testing
+enable_testing()
+
+# Create PE Google Test executable
+set(PE_GTEST_SOURCES
+    "${CMAKE_SOURCE_DIR}/src/tests/pe_gtest.cpp"
+    "${CMAKE_SOURCE_DIR}/src/gemmini/pe.cpp"
+)
+
+add_executable(pe_gtest ${PE_GTEST_SOURCES})
+
+# Link PE Google Test with required libraries
+target_link_libraries(pe_gtest
+    sparta 
+    simdb 
+    ${Boost_LIBRARIES} 
+    ${HDF5_LIBRARIES}
+    yaml-cpp
+    sqlite3
+    ${ZLIB_LIBRARIES}
+    ${GTEST_LIBRARIES}
+    pthread
+)
+
+# Register Google Test
+include(GoogleTest)
+gtest_discover_tests(pe_gtest)
+
 # Install targets
-install(TARGETS gemmini_simulator
+install(TARGETS gemmini_simulator pe_gtest
     RUNTIME DESTINATION bin
 )
 
@@ -132,4 +165,4 @@ message(STATUS "SQLite3 Include Directory: ${SQLite3_INCLUDE_DIRS}")
 message(STATUS "SQLite3 Libraries: ${SQLite3_LIBRARIES}")
 message(STATUS "ZLIB Include Directory: ${ZLIB_INCLUDE_DIRS}")
 message(STATUS "ZLIB Libraries: ${ZLIB_LIBRARIES}")
-message(STATUS "Gemmini Sources: ${GEMMINI_SOURCES}") 
+message(STATUS "Gemmini Sources: ${GEMMINI_SOURCES}")

@@ -1,0 +1,5 @@
+top.pe:
+  params:
+    compute_time: 1
+    act_width: 16
+    weight_width: 16

@@ -1,3 +1,5 @@
 bin/*
 build/*
-riscv-perf-model/*
+riscv-perf-model
+.vscode/*
+.metals/*

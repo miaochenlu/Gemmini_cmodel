@@ -1,0 +1,64 @@
+---
+# C++ Format Configuration for Gemmini C-Model
+Language: Cpp
+
+# Basic Indentation and Spacing
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
+# Braces Configuration - Keep opening braces on same line
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false          # class X {
+  AfterFunction: false       # void f() {
+  AfterControlStatement: false  # if/for/while {
+  AfterEnum: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+
+# Class and inheritance formatting
+AccessModifierOffset: -4     # public: at same level as class
+SpaceBeforeInheritanceColon: true  # class X : public Y
+BreakInheritanceList: AfterColon   # class X : 
+                                   #     public Y
+
+# Alignment and Indentation
+AlignAfterOpenBracket: Align
+AlignTrailingComments: true
+IndentCaseLabels: false
+IndentAccessModifiers: false
+FixNamespaceComments: true
+
+# Line Breaks and Spacing
+AllowShortFunctionsOnASingleLine: All
+KeepEmptyLinesAtTheStartOfBlocks: true
+MaxEmptyLinesToKeep: 1
+SpacesBeforeTrailingComments: 1
+
+# Pointer and Reference Alignment
+PointerAlignment: Left       # int* var
+ReferenceAlignment: Middle   # int & var
+
+# Comments and Macros
+ReflowComments: true
+CommentPragmas: "^ IWYU pragma:|BEGIN_NS|END_NS"
+MacroBlockBegin: "BEGIN_NS"
+MacroBlockEnd: "END_NS"
+StatementMacros:
+  - BEGIN_NS
+  - END_NS
+
+# Includes and Sort Order
+SortIncludes: false
+
+# C++ Specific Features
+Cpp11BracedListStyle: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeParens: ControlStatements

@@ -5,145 +5,137 @@
 #include "sparta/kernel/SpartaHandler.hpp"
 #include <iostream>
 
-namespace gemmini
-{
-    // Initialize static name
-    const char PE::name[] = "pe";
+namespace gemmini {
+// Initialize static name
+const char PE::name[] = "pe";
+
+// PE Constructor
+PE::PE(sparta::TreeNode* node, const PEParameterSet* params)
+    : sparta::Unit(node), mPortSet(node), mUnitEventSet(node),
+      mLogger(node, "pe", "Processing Element Log"), mComputeTime(params->compute_time),
+      mActWidth(params->act_width), mWeightWidth(params->weight_width),
+      mTotalMacs(getStatisticSet(), "total_macs", "Count of MAC operations",
+                 sparta::Counter::COUNT_NORMAL),
+      mTickEvent(&mUnitEventSet, "tick_event", CREATE_SPARTA_HANDLER(PE, Tick)) {
+    // Register port handlers
+    mPortSet.inWeight.registerConsumerHandler(
+        CREATE_SPARTA_HANDLER_WITH_DATA(PE, HandleWeight, int16_t));
+    mPortSet.inAct.registerConsumerHandler(
+        CREATE_SPARTA_HANDLER_WITH_DATA(PE, HandleActivation, int16_t));
+    mPortSet.inWtPs.registerConsumerHandler(
+        CREATE_SPARTA_HANDLER_WITH_DATA(PE, HandleWeightPartialSum, int32_t));
+    mPortSet.inWtValid.registerConsumerHandler(
+        CREATE_SPARTA_HANDLER_WITH_DATA(PE, HandleWeightValid, uint32_t));
+
+    // Create and register tick event
+    sparta::StartupEvent(node, CREATE_SPARTA_HANDLER(PE, Tick));
+}
+
+// Direct methods to set values
+void PE::SetWeight(int16_t weight) { HandleWeight(weight); }
+
+void PE::ReceiveActivation(int16_t act) { HandleActivation(act); }
+
+void PE::ReceiveWeightPartialSum(int32_t wtPs) { HandleWeightPartialSum(wtPs); }
+
+void PE::SetWeightValidSignal(uint32_t valid) { HandleWeightValid(valid); }
+
+// Handle direct weight initialization (used for testing/initialization)
+void PE::HandleWeight(const int16_t & weight) {
+#ifdef DEBUG_PE
+    std::cout << "PE: Direct weight set: " << weight << std::endl;
+#endif
+    mWeightReg = weight;
+}
+
+// Handle activation input from west
+void PE::HandleActivation(const int16_t & act) {
+    // Always register the activation input, as per RTL
+    mActReg = act;
     
-    // PE Constructor
-    PE::PE(sparta::TreeNode* node, const PEParameterSet* params) :
-        sparta::Unit(node),
-        port_set_(node),
-        unit_event_set_(node),
-        logger_(node, "pe", "Processing Element Log"),
-        compute_time_(params->compute_time),
-        data_width_(params->data_width),
-        total_macs_(getStatisticSet(), "total_macs", "Count of MAC operations", sparta::Counter::COUNT_NORMAL),
-        tick_event_(&unit_event_set_, "tick_event", CREATE_SPARTA_HANDLER(PE, tick_))
-    {
-        // Register port handlers
-        port_set_.in_weight.registerConsumerHandler(CREATE_SPARTA_HANDLER_WITH_DATA(PE, handleWeight_, int16_t));
-        port_set_.in_data.registerConsumerHandler(CREATE_SPARTA_HANDLER_WITH_DATA(PE, handleData_, int16_t));
-        port_set_.in_control.registerConsumerHandler(CREATE_SPARTA_HANDLER_WITH_DATA(PE, handleControl_, uint32_t));
+    // Forward activation to east (next PE)
+    mPortSet.outAct.send(mActReg);
+
+#ifdef DEBUG_PE
+    std::cout << "PE: Received activation: " << act << ", registered: " << mActReg << std::endl;
+#endif
+
+    // The actual MAC computation is triggered by ProcessData, not directly here
+}
+
+// Handle weight/partial sum from north
+void PE::HandleWeightPartialSum(const int32_t & wtPs) {
+    if (mWeightLoadingMode) {
+        // Weight loading mode - pass weight down the column
+        // During weight loading, the inWtPs contains the weight value itself
+        mWeightReg = wtPs & ((1 << mWeightWidth) - 1); // Extract lower bits as weight
+        mPortSet.outWtPs.send(wtPs); // Forward weight to south (next PE in column)
         
-        // Create and register tick event
-        sparta::StartupEvent(node, CREATE_SPARTA_HANDLER(PE, tick_));
-    }
-    
-    // Direct methods to set values
-    void PE::setWeight(int16_t weight) {
-        handleWeight_(weight);
-    }
-    
-    void PE::receiveData(int16_t data) {
-        handleData_(data);
-    }
-    
-    void PE::controlSignal(uint32_t signal) {
-        handleControl_(signal);
-    }
-    
-    // Handle weight input
-    void PE::handleWeight_(const int16_t& weight)
-    {
-        #ifdef DEBUG_PE
-        std::cout << "PE: Received weight value: " << weight << std::endl;
-        #endif
-        weight_ = weight;
-    }
-    
-    // Handle data input
-    void PE::handleData_(const int16_t& data)
-    {
-        if (busy_) {
-            #ifdef DEBUG_PE
-            std::cout << "PE: is busy, ignoring input data: " << data << std::endl;
-            #endif
-            return;
-        }
-        
-        #ifdef DEBUG_PE
-        std::cout << "PE: Received input data: " << data << std::endl;
-        #endif
-        
-        input_ = data;
-        
-        // Set output (for forwarding to next PE)
-        output_ = input_;
-        
-        // Forward data to next PE
-        port_set_.out_data.send(output_);
-        
-        // Start MAC computation
-        computeResult_();
-    }
-    
-    // Handle control signals
-    void PE::handleControl_(const uint32_t& signal)
-    {
-        #ifdef DEBUG_PE
-        std::cout << "PE: Received control signal: " << signal << std::endl;
-        #endif
-        
-        // If it's a reset signal, reset the accumulator
-        if (signal == 1) {
-            accumulator_ = 0;
-            #ifdef DEBUG_PE
-            std::cout << "PE: Accumulator reset to 0" << std::endl;
-            #endif
-        }
-        
-        // If it's a read signal, send accumulated result
-        if (signal == 2) {
-            port_set_.out_result.send(accumulator_);
-            #ifdef DEBUG_PE
-            std::cout << "PE: Sent accumulated result: " << accumulator_ << std::endl;
-            #endif
-        }
-    }
-    
-    // Compute MAC result
-    void PE::computeResult_()
-    {
-        // Start computation process
-        busy_ = true;
-        cycle_counter_ = compute_time_;
-        
+#ifdef DEBUG_PE
+        std::cout << "PE: Weight loading mode - received weight: " << wtPs 
+                  << ", stored: " << mWeightReg << std::endl;
+#endif
+    } else {
+        // Computation mode - compute MAC and forward partial sum
         // Perform MAC operation (multiply-accumulate)
-        int32_t product = static_cast<int32_t>(weight_) * static_cast<int32_t>(input_);
-        accumulator_ += product;
+        int32_t mac = static_cast<int32_t>(mWeightReg) * static_cast<int32_t>(mActReg);
+        mPartialSumReg = wtPs + mac;
+        
+        // Send partial sum to south (next PE in column)
+        mPortSet.outWtPs.send(mPartialSumReg);
         
         // Count operation for statistics
-        total_macs_++;
+        mTotalMacs++;
         
-        #ifdef DEBUG_PE
-        std::cout << "PE: Performed MAC: " << weight_ << " * " << input_ 
-                  << " = " << product 
-                  << ", accumulator = " << accumulator_ << std::endl;
-        #endif
+#ifdef DEBUG_PE
+        std::cout << "PE: Computation mode - act: " << mActReg << ", weight: " << mWeightReg 
+                  << ", mac: " << mac << ", in_ps: " << wtPs << ", out_ps: " << mPartialSumReg << std::endl;
+#endif
     }
+}
+
+// Handle weight valid signal
+void PE::HandleWeightValid(const uint32_t & valid) {
+    // Set weight loading mode based on valid signal (1 = weight loading mode)
+    mWeightLoadingMode = (valid == 1);
     
-    // Tick method - process one cycle (called every clock cycle)
-    void PE::tick_()
-    {
-        if (busy_) {
-            if (cycle_counter_ > 0) {
-                --cycle_counter_;
-                #ifdef DEBUG_PE
-                std::cout << "PE: Cycle counter: " << cycle_counter_ << std::endl;
-                #endif
-            }
-            
-            if (cycle_counter_ == 0) {
-                busy_ = false;
-                #ifdef DEBUG_PE
-                std::cout << "PE: computation complete" << std::endl;
-                #endif
-            }
+#ifdef DEBUG_PE
+    std::cout << "PE: Weight valid signal: " << valid << ", weight loading mode: " 
+              << (mWeightLoadingMode ? "ON" : "OFF") << std::endl;
+#endif
+}
+
+// Process data - this is a placeholder for any additional processing logic
+void PE::ProcessData() {
+    // Start processing - set busy flag and cycle counter
+    mBusy = true;
+    mCycleCounter = mComputeTime;
+    
+#ifdef DEBUG_PE
+    std::cout << "PE: Processing started, compute time: " << mComputeTime << std::endl;
+#endif
+}
+
+// Tick method - process one cycle (called every clock cycle)
+void PE::Tick() {
+    if (mBusy) {
+        if (mCycleCounter > 0) {
+            --mCycleCounter;
+#ifdef DEBUG_PE
+            std::cout << "PE: Cycle counter: " << mCycleCounter << std::endl;
+#endif
         }
-        
-        // Schedule next tick using UniqueEvent
-        tick_event_.schedule(1);
+
+        if (mCycleCounter == 0) {
+            mBusy = false;
+#ifdef DEBUG_PE
+            std::cout << "PE: Processing complete" << std::endl;
+#endif
+        }
     }
-    
-} // namespace gemmini 
+
+    // Schedule next tick using UniqueEvent
+    mTickEvent.schedule(1);
+}
+
+} // namespace gemmini
