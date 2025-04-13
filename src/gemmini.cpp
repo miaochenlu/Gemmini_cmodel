@@ -53,7 +53,7 @@ void GemminiSimulation::RunSimulation(const MatrixPtr & matrixA, const MatrixPtr
     // Calculate expected cycles
     // For a matrix multiplication using a 4x4 systolic array:
     // - Setup: 1 cycle
-    // - Systolic array processing: rows + cols - 1 + compute_time cycles
+    // - Systolic array processing: rows + cols - 1 + compute_cycles cycles
     // - Computation complete: 1 cycle
     // - Block handling: number of blocks * (above)
     uint32_t rowsPerBlock = 4;

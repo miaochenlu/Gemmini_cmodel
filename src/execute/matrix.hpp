@@ -23,11 +23,20 @@ class Vector {
 public:
     Vector(uint32_t size) : mData(size, 0) {}
 
+    // Access operators
     int16_t & operator[](size_t idx) { return mData[idx]; }
-
     const int16_t & operator[](size_t idx) const { return mData[idx]; }
 
+    // Getter methods with both naming conventions
     uint32_t Size() const { return mData.size(); }
+    uint32_t size() const { return mData.size(); }
+    
+    // Element access
+    int16_t get(uint32_t idx) const { return mData[idx]; }
+    void set(uint32_t idx, int16_t value) { mData[idx] = value; }
+    
+    // Fill with zeros
+    void fillZero() { std::fill(mData.begin(), mData.end(), 0); }
 
     friend std::ostream & operator<<(std::ostream & os, const Vector & vec) {
         os << "[";
@@ -47,15 +56,31 @@ private:
 // Simple Matrix class for data storage and manipulation
 class Matrix {
 public:
-    Matrix(uint32_t rows, uint32_t cols) : mRows(rows), mCols(cols), mData(rows * cols, 0) {}
-
+    // Public member variables for direct access
+    uint32_t rows;
+    uint32_t cols;
+    
+    // Constructor
+    Matrix(uint32_t rows, uint32_t cols) 
+        : rows(rows), cols(cols), mRows(rows), mCols(cols), mData(rows * cols, 0) {}
+    
+    // Access operators with two naming styles for compatibility
     int16_t & At(uint32_t row, uint32_t col) { return mData[row * mCols + col]; }
-
     const int16_t & At(uint32_t row, uint32_t col) const { return mData[row * mCols + col]; }
+    
+    int16_t & at(uint32_t row, uint32_t col) { return mData[row * mCols + col]; }
+    const int16_t & at(uint32_t row, uint32_t col) const { return mData[row * mCols + col]; }
 
+    // Property getters with two naming styles for compatibility
     uint32_t Rows() const { return mRows; }
-
     uint32_t Cols() const { return mCols; }
+    
+    // Element access
+    int16_t get(uint32_t row, uint32_t col) const { return mData[row * mCols + col]; }
+    void set(uint32_t row, uint32_t col, int16_t value) { mData[row * mCols + col] = value; }
+    
+    // Fill with zeros
+    void fillZero() { std::fill(mData.begin(), mData.end(), 0); }
 
     friend std::ostream & operator<<(std::ostream & os, const Matrix & mat) {
         for (uint32_t r = 0; r < mat.Rows(); ++r) {

@@ -41,7 +41,7 @@ public:
     PEParameterSet(sparta::TreeNode* n) : sparta::ParameterSet(n) { }
 
     // 声明参数
-    PARAMETER(uint32_t, compute_time, 1, "MAC操作所需周期数")
+    PARAMETER(uint32_t, compute_cycles, 1, "MAC操作所需周期数")
     PARAMETER(uint32_t, data_width, 16, "数据位宽")
 };
 
@@ -110,7 +110,7 @@ private:
     uint32_t cycle_counter_ = 0; // 计算周期计数器
 
     // 配置参数
-    const uint32_t compute_time_;
+    const uint32_t compute_cycles_;
     const uint32_t data_width_;
 
     // 统计信息
@@ -140,7 +140,7 @@ PE::PE(sparta::TreeNode* node, const PEParameterSet* params) :
     port_set_(node),
     unit_event_set_(node),
     logger_(node, "pe", "Processing Element Log"),
-    compute_time_(params->compute_time),
+    compute_cycles_(params->compute_cycles),
     data_width_(params->data_width),
     total_macs_(getStatisticSet(), "total_macs", "Count of MAC operations", sparta::Counter::COUNT_NORMAL),
     tick_event_(&unit_event_set_, "tick_event", CREATE_SPARTA_HANDLER(PE, tick_))
@@ -181,7 +181,7 @@ void PE::handleData_(const int16_t& data) {
 // MAC计算实现
 void PE::computeResult_() {
     busy_ = true;
-    cycle_counter_ = compute_time_;
+    cycle_counter_ = compute_cycles_;
 
     // 执行MAC操作
     int32_t product = static_cast<int32_t>(weight_) * static_cast<int32_t>(input_);
@@ -223,7 +223,7 @@ public:
     // 声明参数
     PARAMETER(uint32_t, rows, 4, "阵列行数")
     PARAMETER(uint32_t, cols, 4, "阵列列数")
-    PARAMETER(uint32_t, compute_time, 1, "PE MAC操作所需周期数")
+    PARAMETER(uint32_t, compute_cycles, 1, "PE MAC操作所需周期数")
 };
 
 // 2. 定义端口集
@@ -275,7 +275,7 @@ private:
     // 配置参数
     const uint32_t rows_;
     const uint32_t cols_;
-    const uint32_t compute_time_;
+    const uint32_t compute_cycles_;
 
     // PE阵列
     std::vector<PE*> pes_; // 扁平化的2D阵列
@@ -324,7 +324,7 @@ SystolicArray::SystolicArray(sparta::TreeNode* node, const SystolicArrayParamete
     logger_(node, "systolic_array", "Systolic Array Log"),
     rows_(params->rows),
     cols_(params->cols),
-    compute_time_(params->compute_time),
+    compute_cycles_(params->compute_cycles),
     total_matrix_ops_(getStatisticSet(), "total_matrix_ops", "Count of matrix operations", sparta::Counter::COUNT_NORMAL),
     tick_event_(&unit_event_set_, "tick_event", CREATE_SPARTA_HANDLER(SystolicArray, tick_))
 {
@@ -345,7 +345,7 @@ SystolicArray::SystolicArray(sparta::TreeNode* node, const SystolicArrayParamete
 
             // 创建PE参数集
             auto pe_params = new PEParameterSet(pe_node);
-            pe_params->compute_time = compute_time_;
+            pe_params->compute_cycles = compute_cycles_;
 
             // 创建PE
             PE::Factory pe_factory;
@@ -435,7 +435,7 @@ void SystolicArray::handleVector_(const VectorPtr& input) {
     current_cycle_ = 0;
 
     // 计算所需总周期 (对于倾斜调度)
-    total_cycles_needed_ = rows_ + cols_ - 1 + compute_time_;
+    total_cycles_needed_ = rows_ + cols_ - 1 + compute_cycles_;
 
     std::cout << "Processing will take " << total_cycles_needed_ << " cycles" << std::endl;
 }

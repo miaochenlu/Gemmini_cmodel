@@ -28,7 +28,7 @@ PE 被实现为一个 C++类，继承自`sparta::Unit`，与 SPARTA 仿真框架
 
 ### 参数
 
-- `compute_time_`：MAC 操作所需的周期数（当前设置为 0 个周期）
+- `compute_cycles_`：MAC 操作所需的周期数（当前设置为 0 个周期）
 - `data_width_`：PE 处理的数据位宽
 
 ## 数据流
@@ -74,7 +74,7 @@ PE 被实现为一个 C++类，继承自`sparta::Unit`，与 SPARTA 仿真框架
 
 ### 操作时序
 
-- 每个 MAC 操作需要`compute_time_`个周期完成（当前为 0 个周期）
+- 每个 MAC 操作需要`compute_cycles_`个周期完成（当前为 0 个周期）
 - PE 在内部处理期间设置`busy_`标志
 - 由于 MAC 操作为 0 周期，`cycle_counter_`实际上不会递减
 

@@ -37,7 +37,7 @@ public:
     // Parameters
     PARAMETER(uint32_t, rows, 4, "Number of rows in systolic array")
     PARAMETER(uint32_t, cols, 4, "Number of columns in systolic array")
-    PARAMETER(uint32_t, compute_time, 0, "Cycles required for PE MAC operation")
+    PARAMETER(uint32_t, compute_cycles, 0, "Cycles required for PE MAC operation")
 };
 
 // Port Set for SystolicArray
@@ -101,7 +101,7 @@ private:
     // Configuration parameters
     const uint32_t mRows;
     const uint32_t mCols;
-    const uint32_t mComputeTime;
+    const uint32_t mComputeCycles;
 
     // Array of Processing Elements
     std::vector<PE*> mPEs; // Flattened 2D array for easier access

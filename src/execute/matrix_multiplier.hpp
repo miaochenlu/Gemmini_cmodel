@@ -16,9 +16,9 @@
 #include "sparta/statistics/Counter.hpp"
 #include "sparta/log/MessageSource.hpp"
 
-#include "gemmini/common.hpp"
-#include "gemmini/matrix.hpp"
-#include "gemmini/systolic_array.hpp"
+#include "utils/common.hpp"
+#include "execute/matrix.hpp"
+#include "execute/systolic_array.hpp"
 
 BEGIN_NS(gemmini)
 

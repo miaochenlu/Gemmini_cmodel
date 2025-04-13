@@ -11,101 +11,101 @@ top.matrix_multiplier.systolic_array:
   params:
     rows: 4
     cols: 4
-    compute_time: 1 # cycles per MAC operation
+    compute_cycles: 1 # cycles per MAC operation
 
 # Configure each PE in the systolic array to have a 1-cycle compute time
 top.matrix_multiplier.systolic_array.pe_0_0:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_0_1:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_0_2:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_0_3:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_1_0:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_1_1:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_1_2:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_1_3:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_2_0:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_2_1:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_2_2:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_2_3:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_3_0:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_3_1:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_3_2:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16
 
 top.matrix_multiplier.systolic_array.pe_3_3:
   params:
-    compute_time: 1
+    compute_cycles: 1
     act_width: 16
     weight_width: 16

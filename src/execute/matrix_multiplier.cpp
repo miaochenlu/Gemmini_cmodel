@@ -1,5 +1,5 @@
 // matrix_multiplier.cpp - Implementation of Matrix Multiplier for Gemmini using SPARTA
-#include "gemmini/matrix_multiplier.hpp"
+#include "execute/matrix_multiplier.hpp"
 #include "sparta/kernel/Scheduler.hpp"
 #include "sparta/kernel/SpartaHandler.hpp"
 #include <algorithm>
